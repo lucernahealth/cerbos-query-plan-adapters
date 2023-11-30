@@ -1,4 +1,6 @@
 import pytest
+import logging
+import json
 from cerbos.sdk.model import (
     PlanResourcesFilter,
     PlanResourcesFilterKind,
@@ -6,6 +8,8 @@ from cerbos.sdk.model import (
 )
 
 from cerbos_opensearch import get_query
+
+logger = logging.getLogger(__name__)
 
 
 def _default_resp_params():
@@ -18,148 +22,145 @@ def _default_resp_params():
 
 
 class TestGetQuery:
+    def execute_query(self, query, opensearch_client, index_name):
+        logger.info("query: %s", json.dumps(query))
+        result = opensearch_client.search(index=index_name, body=query)
+        hits = result.get("hits", {}).get("hits", [])
+        return hits
+
     def test_always_allow(
         self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("always-allow", principal, resource_desc)
         query = get_query(plan)
-        result = opensearch_client.search(index=index_name, body=query)
-        hits = result.get("hits", {}).get("hits", [])
+        hits = self.execute_query(query, opensearch_client, index_name)
         assert len(hits) == 3
 
+    def test_always_deny(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("always-deny", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 0
 
-#         plan = cerbos_client.plan_resources("always-allow", principal, resource_desc)
-#         query = get_query(plan, resource_table, {})
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 3
-#
-#     def test_always_deny(
-#         self, cerbos_client, principal, resource_desc, resource_table, conn
-#     ):
-#         plan = cerbos_client.plan_resources("always-deny", principal, resource_desc)
-#         query = get_query(plan, resource_table, {})
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 0
-#
-#     def test_equals(
-#         self, cerbos_client, principal, resource_desc, resource_table, conn
-#     ):
-#         plan = cerbos_client.plan_resources("equal", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aBool": resource_table.aBool,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 2
-#         assert all(map(lambda x: x.name in {"resource1", "resource3"}, res))
-#
-#     def test_not_equals(
-#         self, cerbos_client, principal, resource_desc, resource_table, conn
-#     ):
-#         plan = cerbos_client.plan_resources("ne", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aString": resource_table.aString,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 2
-#         assert all(map(lambda x: x.name in {"resource2", "resource3"}, res))
-#
-#     def test_and(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("and", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aBool": resource_table.aBool,
-#             "request.resource.attr.aString": resource_table.aString,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 1
-#         assert res[0].name == "resource3"
-#
+    def test_equals(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("equal", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1", "resource3"}, hits)
+        )
+
+    def test_not_equals(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("ne", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource2", "resource3"}, hits)
+        )
+
+    # def test_and(
+    #     self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    # ):
+    #     plan = cerbos_client.plan_resources("and", principal, resource_desc)
+    #     query = get_query(plan)
+    #     hits = self.execute_query(query, opensearch_client, index_name)
+    #     assert len(hits) == 1
+    #     assert hits[0]["_source"]["name"] == "resource3"
+
 #     def test_not_and(
-#         self, cerbos_client, principal, resource_desc, resource_table, conn
+#         self, cerbos_client, principal, resource_desc, opensearch_client, index_name
 #     ):
 #         plan = cerbos_client.plan_resources("nand", principal, resource_desc)
 #         attr = {
 #             "request.resource.attr.aBool": resource_table.aBool,
 #             "request.resource.attr.aString": resource_table.aString,
 #         }
-#         query = get_query(plan, resource_table, attr)
+#         query = get_query(plan)
 #         res = conn.execute(query).fetchall()
 #         assert len(res) == 2
 #         assert all(map(lambda x: x.name in {"resource1", "resource2"}, res))
 #
-#     def test_or(self, cerbos_client, principal, resource_desc, resource_table, conn):
+#     def test_or(self, cerbos_client, principal, resource_desc, opensearch_client, index_name):
 #         plan = cerbos_client.plan_resources("or", principal, resource_desc)
 #         attr = {
 #             "request.resource.attr.aBool": resource_table.aBool,
 #             "request.resource.attr.aString": resource_table.aString,
 #         }
-#         query = get_query(plan, resource_table, attr)
+#         query = get_query(plan)
 #         res = conn.execute(query).fetchall()
 #         assert len(res) == 3
 #
 #     def test_not_or(
-#         self, cerbos_client, principal, resource_desc, resource_table, conn
+#         self, cerbos_client, principal, resource_desc, opensearch_client, index_name
 #     ):
 #         plan = cerbos_client.plan_resources("nor", principal, resource_desc)
 #         attr = {
 #             "request.resource.attr.aBool": resource_table.aBool,
 #             "request.resource.attr.aString": resource_table.aString,
 #         }
-#         query = get_query(plan, resource_table, attr)
+#         query = get_query(plan)
 #         res = conn.execute(query).fetchall()
 #         assert len(res) == 0
-#
-#     def test_in(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("in", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aString": resource_table.aString,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 2
-#         assert all(map(lambda x: x.name in {"resource1", "resource3"}, res))
-#
-#     def test_lt(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("lt", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aNumber": resource_table.aNumber,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 1
-#         assert res[0].name == "resource1"
-#
-#     def test_gt(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("gt", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aNumber": resource_table.aNumber,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 2
-#         assert all(map(lambda x: x.name in {"resource2", "resource3"}, res))
-#
-#     def test_lte(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("lte", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aNumber": resource_table.aNumber,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 2
-#         assert all(map(lambda x: x.name in {"resource1", "resource2"}, res))
-#
-#     def test_gte(self, cerbos_client, principal, resource_desc, resource_table, conn):
-#         plan = cerbos_client.plan_resources("gte", principal, resource_desc)
-#         attr = {
-#             "request.resource.attr.aNumber": resource_table.aNumber,
-#         }
-#         query = get_query(plan, resource_table, attr)
-#         res = conn.execute(query).fetchall()
-#         assert len(res) == 3
-#
+
+    def test_in(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("in", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1", "resource3"}, hits)
+        )
+
+    def test_lt(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("lt", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 1
+        assert hits[0]["_source"]["name"] == "resource1"
+
+    def test_gt(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("gt", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource2", "resource3"}, hits)
+        )
+
+    def test_lte(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("lte", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1", "resource2"}, hits)
+        )
+
+    def test_gte(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("gte", principal, resource_desc)
+        query = get_query(plan)
+        hits = self.execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 3
+
+
 #     def test_relation_some(
 #         self, cerbos_client, principal, resource_desc, user_table, resource_table, conn
 #     ):
