@@ -20,29 +20,42 @@ _allow_types = frozenset(
 )
 
 
+def wrap_in_bool_if_necessary(conditions, operator_type):
+    wrapped_conditions = [
+        cond if isinstance(cond, dict) and "bool" in cond else {"bool": cond}
+        for cond in conditions
+    ]
+    return {"bool": {operator_type: wrapped_conditions}}
+
+
 def traverse_and_map_operands(operand: dict) -> Any:
     if exp := operand.get("expression"):
-        return {"bool": traverse_and_map_operands(exp)}
+        result = traverse_and_map_operands(exp)
+        return (
+            result
+            if isinstance(result, dict) and "bool" in result
+            else {"bool": result}
+        )
 
     operator = operand["operator"]
     child_operands = operand["operands"]
 
-    # if `operator` in ["and", "or"], `child_operands` is a nested list of `expression` dicts (handled at the
-    # beginning of this closure)
-    if operator == "and":
-        return {
-            "must": {"filter": [traverse_and_map_operands(o) for o in child_operands]}
-        }
-    if operator == "or":
-        return {
-            "should": [traverse_and_map_operands(o) for o in child_operands],
-            "minimum_should_match": 1,
-        }
-    if operator == "not":
-        return {"must_not": [traverse_and_map_operands(o) for o in child_operands]}
+    if operator in ["and", "or", "not"]:
+        operator_type = {
+            "and": "must",
+            "or": "should",
+            "not": "must_not",
+        }[operator]
 
-    # otherwise, they are a list[dict] (len==2), in the form: `[{'variable': 'foo'}, {'value': 'bar'}]`
-    # The order of the keys `variable` and `value` is not guaranteed.
+        conditions = [traverse_and_map_operands(o) for o in child_operands]
+        wrapped_conditions = wrap_in_bool_if_necessary(conditions, operator_type)
+
+        if operator == "or":
+            wrapped_conditions["bool"]["minimum_should_match"] = 1
+
+        return wrapped_conditions
+
+    # Handling other operators
     d = {k: v for o in child_operands for k, v in o.items()}
     variable = d["variable"]
     value = d["value"]
@@ -51,6 +64,7 @@ def traverse_and_map_operands(operand: dict) -> Any:
         raise ValueError(f"Unsupported variable: {variable}")
     variable = variable.replace("request.resource.attr.", "")
 
+    # Constructing the appropriate query based on the operator
     if operator == "eq":
         return {"filter": {"term": {variable: value}}}
     elif operator == "ne":
@@ -68,8 +82,10 @@ def traverse_and_map_operands(operand: dict) -> Any:
         # Overall, term should be used for 'keyword' mappings and match should be used for 'text'.
         # return {"filter": {"terms": {variable: value}}}
         return {
-            "should": [{"match": {variable: v}} for v in value],
-            "minimum_should_match": 1,
+            "bool": {
+                "should": [{"match": {variable: v}} for v in value],
+                "minimum_should_match": 1,
+            }
         }
     else:
         raise ValueError(f"Unsupported operator: {operator}")
