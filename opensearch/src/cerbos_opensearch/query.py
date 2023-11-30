@@ -78,12 +78,15 @@ def traverse_and_map_operands(operand: dict) -> Any:
     elif operator == "ge":
         return {"filter": {"range": {variable: {"gte": value}}}}
     elif operator == "in":
+        # Ensure value is a list for consistent handling (in string vs in list of strings)
+        values = [value] if isinstance(value, str) else value
+
         # TODO pass in mapping so we know the field type and can generate the right query. For keyword
         # Overall, term should be used for 'keyword' mappings and match should be used for 'text'.
         # return {"filter": {"terms": {variable: value}}}
         return {
             "bool": {
-                "should": [{"match": {variable: v}} for v in value],
+                "should": [{"match": {variable: v}} for v in values],
                 "minimum_should_match": 1,
             }
         }
