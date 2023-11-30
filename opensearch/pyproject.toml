@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = {text = "UNLICENSED"}
 dynamic = ["version"]
 
 [project.urls]

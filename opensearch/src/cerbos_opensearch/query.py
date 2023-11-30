@@ -19,6 +19,12 @@ _allow_types = frozenset(
     ]
 )
 
+_operator_type_mapping = {
+    "and": "must",
+    "or": "should",
+    "not": "must_not",
+}
+
 
 def wrap_in_bool_if_necessary(conditions, operator_type):
     wrapped_conditions = [
@@ -40,12 +46,8 @@ def traverse_and_map_operands(operand: dict) -> Any:
     operator = operand["operator"]
     child_operands = operand["operands"]
 
-    if operator in ["and", "or", "not"]:
-        operator_type = {
-            "and": "must",
-            "or": "should",
-            "not": "must_not",
-        }[operator]
+    if operator in _operator_type_mapping.keys():
+        operator_type = _operator_type_mapping[operator]
 
         conditions = [traverse_and_map_operands(o) for o in child_operands]
         wrapped_conditions = wrap_in_bool_if_necessary(conditions, operator_type)
