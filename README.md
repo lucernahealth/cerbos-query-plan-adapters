@@ -6,4 +6,5 @@ Current supported adapters:
 
 - [Prisma](https://github.com/cerbos/query-plan-adapters/tree/main/prisma)
 - [SQLAlchemy](https://github.com/cerbos/query-plan-adapters/tree/main/sqlalchemy)
+- [OpenSearch](https://github.com/lucernahealth/cerbos-query-plan-adapters/tree/main/opensearch)
 - [Mongoose](https://github.com/cerbos/query-plan-adapters/tree/main/mongoose)
