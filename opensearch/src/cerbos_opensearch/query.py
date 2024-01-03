@@ -81,6 +81,8 @@ def traverse_and_map_operands(operand: dict) -> Any:
         return {"filter": {"range": {variable: {"gte": value}}}}
     elif operator == "in":
         # Ensure value is a list for consistent handling (in string vs in list of strings)
+        if not value:
+            value = []
         values = [value] if isinstance(value, str) else value
 
         # TODO pass in mapping so we know the field type and can generate the right query. For keyword
