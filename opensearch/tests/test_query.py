@@ -30,7 +30,7 @@ def execute_query(query, opensearch_client, index_name):
 
 class TestGetQuery:
     def test_always_allow(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("always-allow", principal, resource_desc)
         query = get_query(plan)
@@ -38,7 +38,7 @@ class TestGetQuery:
         assert len(hits) == 3
 
     def test_always_deny(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("always-deny", principal, resource_desc)
         query = get_query(plan)
@@ -46,7 +46,7 @@ class TestGetQuery:
         assert len(hits) == 0
 
     def test_equals(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("equal", principal, resource_desc)
         query = get_query(plan)
@@ -57,7 +57,7 @@ class TestGetQuery:
         )
 
     def test_not_equals(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("ne", principal, resource_desc)
         query = get_query(plan)
@@ -68,7 +68,7 @@ class TestGetQuery:
         )
 
     def test_and(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("and", principal, resource_desc)
         query = get_query(plan)
@@ -77,7 +77,7 @@ class TestGetQuery:
         assert hits[0]["_source"]["name"] == "resource3"
 
     def test_not_and(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("nand", principal, resource_desc)
         query = get_query(plan)
@@ -88,7 +88,7 @@ class TestGetQuery:
         )
 
     def test_or(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("or", principal, resource_desc)
         query = get_query(plan)
@@ -96,7 +96,7 @@ class TestGetQuery:
         assert len(hits) == 3
 
     def test_not_or(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("nor", principal, resource_desc)
         query = get_query(plan)
@@ -104,7 +104,7 @@ class TestGetQuery:
         assert len(hits) == 0
 
     def test_in(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("in", principal, resource_desc)
         query = get_query(plan)
@@ -115,7 +115,7 @@ class TestGetQuery:
         )
 
     def test_lt(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("lt", principal, resource_desc)
         query = get_query(plan)
@@ -124,7 +124,7 @@ class TestGetQuery:
         assert hits[0]["_source"]["name"] == "resource1"
 
     def test_gt(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("gt", principal, resource_desc)
         query = get_query(plan)
@@ -135,7 +135,7 @@ class TestGetQuery:
         )
 
     def test_lte(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("lte", principal, resource_desc)
         query = get_query(plan)
@@ -146,7 +146,7 @@ class TestGetQuery:
         )
 
     def test_gte(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("gte", principal, resource_desc)
         query = get_query(plan)
@@ -154,7 +154,7 @@ class TestGetQuery:
         assert len(hits) == 3
 
     def test_relation_some(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("relation-some", principal, resource_desc)
         query = get_query(plan)
@@ -165,7 +165,7 @@ class TestGetQuery:
         )
 
     def test_relation_none(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("relation-none", principal, resource_desc)
         query = get_query(plan)
@@ -174,7 +174,7 @@ class TestGetQuery:
         assert hits[0]["_source"]["name"] == "resource3"
 
     def test_relation_is(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("relation-is", principal, resource_desc)
         query = get_query(plan)
@@ -183,7 +183,7 @@ class TestGetQuery:
         assert hits[0]["_source"]["name"] == "resource1"
 
     def test_relation_is_not(
-        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
     ):
         plan = cerbos_client.plan_resources("relation-is-not", principal, resource_desc)
         query = get_query(plan)
@@ -193,15 +193,37 @@ class TestGetQuery:
             map(lambda x: x["_source"]["name"] in {"resource2", "resource3"}, hits)
         )
 
+    def test_intersect(
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("hasIntersection", principal, resource_desc)
+        query = get_query(plan)
+        hits = execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 1
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1"}, hits)
+        )
+
+    def test_intersect_multiple(
+            self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("hasIntersectionMultiple", principal, resource_desc)
+        query = get_query(plan)
+        hits = execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1", "resource3"}, hits)
+        )
+
 
 class TestGetQueryOverrides:
     def test_in_single_query(
-        self,
-        cerbos_client,
-        principal,
-        resource_desc,
-        opensearch_client,
-        index_name,
+            self,
+            cerbos_client,
+            principal,
+            resource_desc,
+            opensearch_client,
+            index_name,
     ):
         plan_resources_filter = PlanResourcesFilter.from_dict(
             {
@@ -227,12 +249,12 @@ class TestGetQueryOverrides:
         assert hits[0]["_source"]["name"] == "resource1"
 
     def test_in_multiple_query(
-        self,
-        cerbos_client,
-        principal,
-        resource_desc,
-        opensearch_client,
-        index_name,
+            self,
+            cerbos_client,
+            principal,
+            resource_desc,
+            opensearch_client,
+            index_name,
     ):
         plan_resources_filter = PlanResourcesFilter.from_dict(
             {

@@ -183,3 +183,25 @@ resourcePolicy:
       condition:
         match:
           expr: request.resource.attr.nested.aBool == true
+
+    - actions:
+        - "hasIntersection"
+      effect: EFFECT_ALLOW
+      roles:
+        - USER
+      condition:
+        match:
+          expr: hasIntersection(request.resource.attr.aList, request.principal.attr.aList)
+
+
+    - actions:
+        - "hasIntersectionMultiple"
+      effect: EFFECT_ALLOW
+      roles:
+        - USER
+      condition:
+        match:
+          any:
+            of:
+              - expr: hasIntersection(request.resource.attr.aList, request.principal.attr.aList)
+              - expr: hasIntersection(request.resource.attr.bList, request.principal.attr.bList)

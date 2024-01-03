@@ -29,6 +29,7 @@ from docker import DockerClient
 from opensearchpy import OpenSearch
 from opensearchpy.connection.connections import create_connection
 from opensearchpy.helpers import bulk
+from google.protobuf.struct_pb2 import ListValue, Value
 
 USER_ROLE = "USER"
 logger = logging.getLogger(__name__)
@@ -107,6 +108,8 @@ def index_name(opensearch_client):
                 "aNumber": {"type": "integer"},
                 "ownedBy": {"type": "keyword"},
                 "createdBy": {"type": "keyword"},
+                "aList": {"type": "keyword"},
+                "bList": {"type": "keyword"},
             }
         }
     }
@@ -124,6 +127,8 @@ def index_name(opensearch_client):
                 "aNumber": 1,
                 "ownedBy": "1",
                 "createdBy": "1",
+                "aList": ["alist_item_1", "alist_item_2"],
+                "bList": ["blist_item_2", "blist_item_3"],
             },
         },
         {
@@ -136,6 +141,8 @@ def index_name(opensearch_client):
                 "aNumber": 2,
                 "ownedBy": "1",
                 "createdBy": "2",
+                "aList": ["alist_item_2", "alist_item_3"],
+                "bList": ["blist_item_2", "blist_item_3"],
             },
         },
         {
@@ -148,6 +155,8 @@ def index_name(opensearch_client):
                 "aNumber": 3,
                 "ownedBy": "2",
                 "createdBy": "2",
+                "aList": ["alist_item_3"],
+                "bList": ["blist_item_1"],
             },
         },
     ]
@@ -192,12 +201,12 @@ def cerbos_client(request):
 
 @pytest.fixture
 def principal(cerbos_client):
-    principal_cls = (
-        engine_pb2.Principal
-        if isinstance(cerbos_client, GrpcCerbosClient)
-        else Principal
-    )
-    return principal_cls(id="1", roles={USER_ROLE})
+    grpc = isinstance(cerbos_client, GrpcCerbosClient)
+    principal_cls = engine_pb2.Principal if grpc else Principal
+    attr = {"aList": Value(list_value=ListValue(values=[Value(string_value="alist_item_1")])),
+            "bList": Value(list_value=ListValue(values=[Value(string_value="blist_item_1")]))} if grpc else {
+        "aList": ["alist_item_1"], "bList": ["blist_item_1"]}
+    return principal_cls(id="1", roles={USER_ROLE}, attr=attr)
 
 
 @pytest.fixture

@@ -92,12 +92,17 @@ def traverse_and_map_operands(operand: dict) -> Any:
                 "minimum_should_match": 1,
             }
         }
+    elif operator == "hasIntersection":
+        values = [value] if isinstance(value, str) else value
+
+        q = {"bool": {"should": {"terms": {variable: values}}}}
+        return q
     else:
         raise ValueError(f"Unsupported operator: {operator}")
 
 
 def get_query(
-    query_plan: PlanResourcesResponse | response_pb2.PlanResourcesResponse,
+        query_plan: PlanResourcesResponse | response_pb2.PlanResourcesResponse,
 ) -> Any:
     if query_plan.filter is None or query_plan.filter.kind in _deny_types:
         return {"query": {"bool": {"must_not": {"match_all": {}}}}}
