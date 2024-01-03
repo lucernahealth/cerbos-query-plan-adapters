@@ -60,7 +60,7 @@ def traverse_and_map_operands(operand: dict) -> Any:
     # Handling other operators
     d = {k: v for o in child_operands for k, v in o.items()}
     variable = d["variable"]
-    value = d["value"]
+    value = d.get("value")
 
     if "request.resource.attr" not in variable:
         raise ValueError(f"Unsupported variable: {variable}")
@@ -93,6 +93,8 @@ def traverse_and_map_operands(operand: dict) -> Any:
             }
         }
     elif operator == "hasIntersection":
+        if not value:
+            value = []
         values = [value] if isinstance(value, str) else value
 
         q = {"bool": {"should": {"terms": {variable: values}}}}
@@ -102,7 +104,7 @@ def traverse_and_map_operands(operand: dict) -> Any:
 
 
 def get_query(
-        query_plan: PlanResourcesResponse | response_pb2.PlanResourcesResponse,
+    query_plan: PlanResourcesResponse | response_pb2.PlanResourcesResponse,
 ) -> Any:
     if query_plan.filter is None or query_plan.filter.kind in _deny_types:
         return {"query": {"bool": {"must_not": {"match_all": {}}}}}

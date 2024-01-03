@@ -209,6 +209,7 @@ class TestGetQuery:
             "hasIntersectionMultiple", principal, resource_desc
         )
         query = get_query(plan)
+        print(query)
         hits = execute_query(query, opensearch_client, index_name)
         assert len(hits) == 2
         assert all(
