@@ -104,7 +104,7 @@ def traverse_and_map_operands(operand: dict) -> Any:
 
 def _handle_list_value(value):
     if not value:
-        value = []
+        return []
     return [value] if isinstance(value, str) else value
 
 
