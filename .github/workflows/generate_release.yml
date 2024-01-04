@@ -1,0 +1,67 @@
+name: generate_release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version. e.g. 1.3.0"
+        required: true
+
+jobs:
+  generate_release_branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: parse version input
+        uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ inputs.release_version }}
+          regex: '^[\d]+.[\d]+.[\d]+$'
+
+      - name: validate version input
+        if: ${{ steps.regex-match.outputs.match == '' }}
+        run: echo Invalid version syntax; exit 1
+
+      - name: set date
+        run: |
+          DATE=$(date +'%B %d, %Y')
+          echo "DATE=$DATE" >> "$GITHUB_ENV"
+
+      - name: Create tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ inputs.release_version }}',
+              sha: context.sha
+            })
+
+# Don't need to create a release branch for now, as this is not being deployed
+#      - name: Create release branch
+#        uses: actions/github-script@v6
+#        with:
+#          script: |
+#            github.rest.git.createRef({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              ref: 'refs/heads/release/v${{ inputs.release_version }}',
+#              sha: context.sha
+#            })
+
+      - name: Create a release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: '${{ inputs.release_version }}',
+              name: '${{ github.event.repository.name }} v${{ inputs.release_version }} ${{ env.DATE }}',
+              generate_release_notes: true
+            })

@@ -193,6 +193,28 @@ class TestGetQuery:
             map(lambda x: x["_source"]["name"] in {"resource2", "resource3"}, hits)
         )
 
+    def test_intersect(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources("hasIntersection", principal, resource_desc)
+        query = get_query(plan)
+        hits = execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 1
+        assert all(map(lambda x: x["_source"]["name"] in {"resource1"}, hits))
+
+    def test_intersect_multiple(
+        self, cerbos_client, principal, resource_desc, opensearch_client, index_name
+    ):
+        plan = cerbos_client.plan_resources(
+            "hasIntersectionMultiple", principal, resource_desc
+        )
+        query = get_query(plan)
+        hits = execute_query(query, opensearch_client, index_name)
+        assert len(hits) == 2
+        assert all(
+            map(lambda x: x["_source"]["name"] in {"resource1", "resource3"}, hits)
+        )
+
 
 class TestGetQueryOverrides:
     def test_in_single_query(
