@@ -81,9 +81,7 @@ def traverse_and_map_operands(operand: dict) -> Any:
         return {"filter": {"range": {variable: {"gte": value}}}}
     elif operator == "in":
         # Ensure value is a list for consistent handling (in string vs in list of strings)
-        if not value:
-            value = []
-        values = [value] if isinstance(value, str) else value
+        values = _handle_list_value(value)
 
         # TODO pass in mapping so we know the field type and can generate the right query. For keyword
         # Overall, term should be used for 'keyword' mappings and match should be used for 'text'.
@@ -95,14 +93,20 @@ def traverse_and_map_operands(operand: dict) -> Any:
             }
         }
     elif operator == "hasIntersection":
-        if not value:
-            value = []
-        values = [value] if isinstance(value, str) else value
+        # Ensure value is a list for consistent handling (in string vs in list of strings)
+        values = _handle_list_value(value)
 
         q = {"bool": {"should": {"terms": {variable: values}}}}
         return q
     else:
         raise ValueError(f"Unsupported operator: {operator}")
+
+
+def _handle_list_value(value):
+    if not value:
+        value = []
+    values = [value] if isinstance(value, str) else value
+    return values
 
 
 def get_query(
